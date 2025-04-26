@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: joy-motivation-bot
+    env: node
+    buildCommand: npm install
+    startCommand: node app.js
+    envVars:
+      - key: BOT_TOKEN
+        sync: false
+      - key: GIPHY_API_KEY
+        sync: false

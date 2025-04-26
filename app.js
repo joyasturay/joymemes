@@ -1,7 +1,21 @@
 require('dotenv').config();
 const { Telegraf } = require('telegraf');
 const fetch = require('node-fetch');
+const express = require('express');
 
+// Create Express app
+const app = express();
+const port = process.env.PORT || 8080;
+
+// Simple route to keep the service alive
+app.get('/', (req, res) => {
+    res.send('Bot is running! 🚀');
+});
+
+// Start Express server
+app.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
+});
 
 const userCooldowns = new Map();
 const COOLDOWN_PERIOD = 30000; 
@@ -124,7 +138,13 @@ setInterval(() => {
 bot.launch();
 
 // Enable graceful stop
-process.once('SIGINT', () => bot.stop('SIGINT'));
-process.once('SIGTERM', () => bot.stop('SIGTERM'));
+process.once('SIGINT', () => {
+    bot.stop('SIGINT');
+    process.exit(0);
+});
+process.once('SIGTERM', () => {
+    bot.stop('SIGTERM');
+    process.exit(0);
+});
 
 console.log('Bot is running... 🚀');

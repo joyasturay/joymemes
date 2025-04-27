@@ -6,7 +6,7 @@ const express = require('express');
 
 const app = express();
 const port = process.env.PORT || 8080;
-const DOMAIN = process.env.DOMAIN; 
+const webhookUrl = `${process.env.DOMAIN}/webhook/${process.env.BOT_TOKEN}`;
 
 // Set up webhook
 app.use(express.json());

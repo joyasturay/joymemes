@@ -153,8 +153,9 @@ setInterval(() => {
 // Replace bot.launch() with webhook setup
 if (process.env.NODE_ENV === 'production') {
     // Use webhooks in production (Render)
-    bot.telegram.setWebhook(`${DOMAIN}/webhook/${process.env.BOT_TOKEN}`);
+    bot.telegram.setWebhook(`${process.env.DOMAIN}/webhook/${process.env.BOT_TOKEN}`);
     console.log('Bot is running on webhooks 🚀');
+    console.log('Webhook URL:', `${process.env.DOMAIN}/webhook/${process.env.BOT_TOKEN}`);
 } else {
     // Use polling in development (local)
     bot.launch();

@@ -6,8 +6,17 @@ const express = require('express');
 
 const app = express();
 const port = process.env.PORT || 8080;
+const DOMAIN = process.env.DOMAIN; 
 
+// Set up webhook
+app.use(express.json());
 
+// Set webhook path
+app.post(`/webhook/${process.env.BOT_TOKEN}`, (req, res) => {
+    bot.handleUpdate(req.body, res);
+});
+
+// Health check route
 app.get('/', (req, res) => {
     res.send('Bot is running! 🚀');
 });
@@ -67,24 +76,30 @@ bot.command('meme', async (ctx) => {
   });
   bot.command('motivate', async (ctx) => {
     try {
-      const motivationalQuotes = [
-        "Believe you can and you're halfway there. 💪",
-        "Push yourself, because no one else is going to do it for you. 🚀",
-        "Dream it. Wish it. Do it. ✨",
-        "Success doesn’t just find you. You have to go out and get it. 🔥",
-        "Great things never come from comfort zones. 🛡️",
-      ];
-  
-      const randomQuote = motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)];
-  
-      const motivationImage = 'https://plus.unsplash.com/premium_photo-1671599016130-7882dbff302f?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'; // Another test image URL
-  
-      await ctx.replyWithPhoto({ url: motivationImage }, { caption: randomQuote });
+        // Using type.fit API instead of quotable
+        const response = await fetch('https://type.fit/api/quotes');
+        const quotes = await response.json();
+        const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+        
+        // Get motivational GIF from Giphy
+        const giphyResponse = await fetch(`https://api.giphy.com/v1/gifs/random?api_key=${GIPHY_API_KEY}&tag=motivation,inspiration,success&rating=g`);
+        const giphyData = await giphyResponse.json();
+        
+        if (giphyData.data && giphyData.data.images && giphyData.data.images.original) {
+            const gifUrl = giphyData.data.images.original.url;
+            await ctx.replyWithAnimation(
+                { url: gifUrl }, 
+                { caption: `${randomQuote.text}\n\n- ${randomQuote.author || 'Unknown'} 💫` }
+            );
+        } else {
+            const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+            await ctx.reply(`${randomQuote.text}\n\n- ${randomQuote.author || 'Unknown'} 💫`);
+        }
     } catch (error) {
-      console.error(error);
-      ctx.reply('Kuch gadbad ho gayi bhai 😔 Firse try kar.');
+        console.error(error);
+        ctx.reply('Kuch gadbad ho gayi bhai 😔 Firse try kar.');
     }
-  });
+});
   
   bot.on('message', async (ctx) => {
       const userId = ctx.from.id;
@@ -135,7 +150,16 @@ setInterval(() => {
         }
     }
 }, 3600000); 
-bot.launch();
+// Replace bot.launch() with webhook setup
+if (process.env.NODE_ENV === 'production') {
+    // Use webhooks in production (Render)
+    bot.telegram.setWebhook(`${DOMAIN}/webhook/${process.env.BOT_TOKEN}`);
+    console.log('Bot is running on webhooks 🚀');
+} else {
+    // Use polling in development (local)
+    bot.launch();
+    console.log('Bot is running on polling 🚀');
+}
 
 
 process.once('SIGINT', () => {
